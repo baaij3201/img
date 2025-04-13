@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片上传、删除与查询系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            overflow-y: auto;
+            /* 使用 flex 布局使内容居中 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #disclaimer {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ef9a9a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #disclaimer h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        #disclaimer ol {
+            padding-left: 20px;
+        }
+
+        #disclaimer label {
+            cursor: pointer;
+        }
+
+        #note {
+            background-color: #88ddff;
+            color: #1188cc;
+            border: 1px solid #4da6ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #note h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .button-group button {
+            background-color: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-group button:hover {
+            background-color: #1976d2;
+        }
+
+        .button-group button:disabled {
+            background-color: #bdbdbd;
+            cursor: not-allowed;
+        }
+
+        #upload-section {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        #upload-section input[type="file"] {
+            display: none;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #upload-password {
+            display: none;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+
+        #upload-confirm {
+            display: none;
+        }
+
+        #upload-result {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        #delete-section {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        #delete-section input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        #delete-confirm {
+            margin-top: 10px;
+        }
+
+        #delete-result {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        #query-section {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        #query-section input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        #query-confirm {
+            margin-top: 10px;
+        }
+
+        #query-result {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .ripple {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 150, 255, 0.5);
+            border-radius: 50%;
+            transform: scale(0);
+            pointer-events: none;
+            animation: ripple 0.6s;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="disclaimer">
+        <h2>免责声明</h2>
+        <p>我们不为任何不能上传的图片负任何责任。不能上传的图片包括但不限于以下几类：</p>
+        <ol>
+            <li>血腥图片：指包含大量人体鲜血、肢体残缺等可能引起他人不适的画面。</li>
+            <li>色情图片：指展示明显性行为、暴露性器官等违反公序良俗的内容。</li>
+            <li>侵权图片：指侵犯他人著作权（如未经授权使用他人的摄影作品、绘画等）、肖像权（未经他人同意使用其肖像）、商标权等知识产权的图片。</li>
+        </ol>
+        <p>如果用户上传此类图片，管理员有权删除。根据《中华人民共和国著作权法》《中华人民共和国治安管理处罚法》《互联网信息服务管理办法》等相关法律法规，用户有责任确保上传的图片符合法律法规和本平台的规定。若用户上传的图片违反上述规定，用户需自行承担相应的法律后果。</p>
+        <input type="checkbox" id="agree-disclaimer">
+        <label for="agree-disclaimer">我已阅读并同意上述免责声明</label>
+    </div>
+    <div id="note">
+        <h2>注意事项</h2>
+        <p>1. 这个网站仍在测试阶段，有大bug</p>
+        <p>2. 只有删除才用口令，访问不需要</p>
+        <p>3. 服务器不稳定，上传不了多上传几次，再搞不了就别搞了</p>
+    </div>
+    <div class="button-group">
+        <button id="upload-button" disabled="disabled">上传文件</button>
+        <button id="delete-button" disabled="disabled">删除文件</button>
+        <button id="query-button" disabled="disabled">查询</button>
+    </div>
+    <div id="upload-section">
+        <input type="file" id="image-input" accept="image/jpeg, image/png, image/gif, image/jpg, image/svg, image/bmp, image/raw">
+        <img id="image-preview" src="%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E3%80%81%E5%88%A0%E9%99%A4%E4%B8%8E%E6%9F%A5%E8%AF%A2%E7%B3%BB%E7%BB%9F_files/%E6%97%A0%E6%A0%87%E9%A2%98.htm" alt="图片预览">
+        <input type="text" id="upload-password" placeholder="输入口令">
+        <button id="upload-confirm">确认上传</button>
+    </div>
+    <div id="upload-result">
+        <button id="copy-link">复制链接</button>
+        <button id="copy-markdown-link">复制 Markdown 链接</button>
+        <button id="jump-to-link">跳转至链接</button>
+        <button id="return-from-upload">返回</button>
+    </div>
+    <div id="delete-section">
+        <input type="text" id="delete-file-name" placeholder="输入文件名">
+        <input type="text" id="delete-password" placeholder="输入口令">
+        <button id="delete-confirm">确认删除</button>
+    </div>
+    <div id="delete-result">
+        <p id="delete-message"></p>
+    </div>
+    <div id="query-section">
+        <input type="text" id="query-file-name" placeholder="输入文件名">
+        <button id="query-confirm">确定</button>
+    </div>
+    <div id="query-result">
+        <button id="query-copy-link">复制链接</button>
+        <button id="query-copy-markdown-link">复制 Markdown 链接</button>
+        <button id="query-jump-to-link">跳转至链接</button>
+        <button id="return-from-query">返回</button>
+    </div>
+
+    <script>
+        const agreeDisclaimer = document.getElementById('agree-disclaimer');
+        const uploadButton = document.getElementById('upload-button');
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadPassword = document.getElementById('upload-password');
+        const uploadConfirm = document.getElementById('upload-confirm');
+        const uploadResult = document.getElementById('upload-result');
+        const copyLink = document.getElementById('copy-link');
+        const copyMarkdownLink = document.getElementById('copy-markdown-link');
+        const jumpToLink = document.getElementById('jump-to-link');
+        const returnFromUpload = document.getElementById('return-from-upload');
+        const deleteButton = document.getElementById('delete-button');
+        const deleteSection = document.getElementById('delete-section');
+        const deleteFileName = document.getElementById('delete-file-name');
+        const deletePassword = document.getElementById('delete-password');
+        const deleteConfirm = document.getElementById('delete-confirm');
+        const deleteResult = document.getElementById('delete-result');
+        const deleteMessage = document.getElementById('delete-message');
+        const queryButton = document.getElementById('query-button');
+        const querySection = document.getElementById('query-section');
+        const queryFileName = document.getElementById('query-file-name');
+        const queryConfirm = document.getElementById('query-confirm');
+        const queryResult = document.getElementById('query-result');
+        const queryCopyLink = document.getElementById('query-copy-link');
+        const queryCopyMarkdownLink = document.getElementById('query-copy-markdown-link');
+        const queryJumpToLink = document.getElementById('query-jump-to-link');
+        const returnFromQuery = document.getElementById('return-from-query');
+
+        let uploadedImageLink = '';
+
+        function disableOtherButtons(currentButton) {
+            const buttons = [uploadButton, deleteButton, queryButton];
+            buttons.forEach(button => {
+                if (button!== currentButton) {
+                    button.disabled = true;
+                }
+            });
+        }
+
+        function enableAllButtons() {
+            uploadButton.disabled = false;
+            deleteButton.disabled = false;
+            queryButton.disabled = false;
+        }
+
+        agreeDisclaimer.addEventListener('change', function () {
+            if (this.checked) {
+                uploadButton.disabled = false;
+                deleteButton.disabled = false;
+                queryButton.disabled = false;
+            } else {
+                uploadButton.disabled = true;
+                deleteButton.disabled = true;
+                queryButton.disabled = true;
+                hideAllSections();
+            }
+        });
+
+        uploadButton.addEventListener('click', function () {
+            disableOtherButtons(this);
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/svg', 'image/bmp', 'image/raw'];
+                if (allowedTypes.includes(file.type)) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        imagePreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    imagePreview.style.display = 'block';
+                    uploadPassword.style.display = 'block';
+                    uploadConfirm.style.display = 'block';
+                    document.getElementById('upload-section').style.display = 'block';
+                } else {
+                    alert('仅允许上传 JPEG、PNG、GIF、JPG、SVG、BMP 或 RAW 格式的图片文件。');
+                    this.value = '';
+                    imagePreview.style.display = 'none';
+                    uploadPassword.style.display = 'none';
+                    uploadConfirm.style.display = 'none';
+                    document.getElementById('upload-section').style.display = 'none';
+                    enableAllButtons();
+                }
+            }
+        });
+
+        uploadConfirm.addEventListener('click', async function () {
+            const file = imageInput.files[0];
+            if (file) {
+                const fileName = file.name;
+                const regex = /^[a-zA-Z0-9_]+\.(jpeg|png|gif|jpg|svg|bmp|raw)$/;
+                if (!regex.test(fileName)) {
+                    alert('文件名格式错误，仅允许字母数字下划线且扩展名必须为 jpeg、png、gif、jpg、svg、bmp 或 raw');
+                    return;
+                }
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('password', uploadPassword.value);
+
+                try {
+                    const response = await fetch('upload.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.text();
+                    if (data.includes('文件上传成功')) {
+                        const fileName = file.name;
+                        uploadedImageLink = window.location.origin + '/image/' + fileName;
+                        uploadResult.style.display = 'block';
+                        document.getElementById('upload-section').style.display = 'none';
+                    } else {
+                        if (data.includes(':')) {
+                            const [code, message] = data.split(': ');
+                            alert(message);
+                        } else {
+                            alert(`未知错误，错误代码: ${data}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('上传出错:', error);
+                    alert(`上传出错，错误代码：500`);
+                }
+            }
+        });
+
+        returnFromUpload.addEventListener('click', function () {
+            uploadResult.style.display = 'none';
+            imageInput.value = '';
+            imagePreview.style.display = 'none';
+            uploadPassword.style.display = 'none';
+            uploadConfirm.style.display = 'none';
+            uploadedImageLink = '';
+            enableAllButtons();
+        });
+
+        copyLink.addEventListener('click', function () {
+            if (uploadedImageLink) {
+                const textArea = document.createElement('textarea');
+                textArea.value = uploadedImageLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                console.log('链接已复制');
+            }
+        });
+
+        copyMarkdownLink.addEventListener('click', function () {
+            if (uploadedImageLink) {
+                const markdownLink = `![图片](${uploadedImageLink})`;
+                const textArea = document.createElement('textarea');
+                textArea.value = markdownLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                console.log('Markdown 链接已复制');
+            }
+        });
+
+        jumpToLink.addEventListener('click', function () {
+            if (uploadedImageLink) {
+                window.open(uploadedImageLink, '_blank');
+            }
+        });
+
+        deleteButton.addEventListener('click', function () {
+            disableOtherButtons(this);
+            deleteSection.style.display = 'block';
+        });
+
+         deleteConfirm.addEventListener('click', async function () {
+            const fileName = deleteFileName.value;
+            const password = deletePassword.value;
+            const regex = /^[a-zA-Z0-9_]+\.(jpeg|png|gif|jpg|svg|bmp|raw)$/;
+            if (!regex.test(fileName)) {
+                alert('文件名格式错误，仅允许字母数字下划线且扩展名必须为 jpeg、png、gif、jpg、svg、bmp 或 raw');
+                return;
+            }
+            if (fileName && password) {
+                
+                const queryParams = `fileName=${encodeURIComponent(fileName)}&password=${encodeURIComponent(password)}`;
+                try {
+                    alert('1');
+                    const response = await fetch('delete.php?' + queryParams, {
+                        method: 'GET'
+                    });
+                    alert('2');
+                    const data = await response.text();
+                    if (data.includes('文件删除成功')) {
+                        deleteMessage.textContent = data;
+                        deleteResult.style.display = 'block';
+                        setTimeout(() => {
+                            deleteResult.style.display = 'none';
+                            deleteSection.style.display = 'none';
+                            deleteFileName.value = '';
+                            deletePassword.value = '';
+                            enableAllButtons();
+                        }, 2000);
+                    } else {
+                        // 将错误信息以 alert 形式展示
+                        alert(data); 
+                        deleteResult.style.display = 'none';
+                        deleteSection.style.display = 'none';
+                        deleteFileName.value = '';
+                        deletePassword.value = '';
+                        enableAllButtons();
+                    }
+                } catch (error) {
+                    console.error('删除出错:', error);
+                    alert(`删除出错，错误代码：500`);
+                    deleteResult.style.display = 'none';
+                    deleteSection.style.display = 'none';
+                    deleteFileName.value = '';
+                    deletePassword.value = '';
+                    enableAllButtons();
+                }
+            } else {//
+                alert('请输入文件名和口令');
+                enableAllButtons();
+            }
+        });
+
+        queryButton.addEventListener('click', function () {
+            disableOtherButtons(this);
+            querySection.style.display = 'block';
+        });
+
+        queryConfirm.addEventListener('click', async function () {
+            const fileName = queryFileName.value;
+            const regex = /^[a-zA-Z0-9_]+\.(jpeg|png|gif|jpg|svg|bmp|raw)$/;
+            if (!regex.test(fileName)) {
+                alert('文件名格式错误，仅允许字母数字下划线且扩展名必须为 jpeg、png、gif、jpg、svg、bmp 或 raw');
+                return;
+            }
+            if (fileName) {
+                const queryParams = `fileName=${encodeURIComponent(fileName)}`;
+                try {
+                    const response = await fetch('query.php?' + queryParams, {
+                        method: 'GET'
+                    });
+                    const data = await response.text();
+                    if (data.includes('文件存在')) {
+                        const imageLink = window.location.origin + '/image/' + fileName;
+                        queryResult.style.display = 'block';
+                        querySection.style.display = 'none';
+                        queryCopyLink.addEventListener('click', function () {
+                            const textArea = document.createElement('textarea');
+                            textArea.value = imageLink;
+                            document.body.appendChild(textArea);
+                            textArea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            console.log('链接已复制');
+                        });
+                        queryCopyMarkdownLink.addEventListener('click', function () {
+                            const markdownLink = `![图片](${imageLink})`;
+                            const textArea = document.createElement('textarea');
+                            textArea.value = markdownLink;
+                            document.body.appendChild(textArea);
+                            textArea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            console.log('Markdown 链接已复制');
+                        });
+                        queryJumpToLink.addEventListener('click', function () {
+                            window.open(imageLink, '_blank');
+                        });
+                    } else {
+                        if (data.includes(':')) {
+                            const [code, message] = data.split(': ');
+                            alert(message);
+                        } else {
+                            alert(`未知错误，错误代码: ${data}`);
+                        }
+                        querySection.style.display = 'none';
+                        enableAllButtons();
+                    }
+                } catch (error) {
+                    console.error('查询出错:', error);
+                    alert(`查询出错，错误代码：500`);
+                    querySection.style.display = 'none';
+                    enableAllButtons();
+                }
+            } else {
+                alert('请输入文件名');
+                enableAllButtons();
+            }
+        });
+
+        returnFromQuery.addEventListener('click', function () {
+            queryResult.style.display = 'none';
+            queryFileName.value = '';
+            enableAllButtons();
+        });
+
+        function hideAllSections() {
+            document.getElementById('upload-section').style.display = 'none';
+            uploadResult.style.display = 'none';
+            deleteSection.style.display = 'none';
+            deleteResult.style.display = 'none';
+            querySection.style.display = 'none';
+            queryResult.style.display = 'none';
+        }
+
+        // 添加涟漪效果
+        document.addEventListener('click', function (e) {
+            const ripple = document.createElement('div');
+            ripple.classList.add('ripple');
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            ripple.style.left = (e.clientX + scrollX - 50) + 'px';
+            ripple.style.top = (e.clientY + scrollY - 50) + 'px';
+            document.body.appendChild(ripple);
+            ripple.addEventListener('animationend', function () {
+                ripple.remove();
+            });
+        });
+    </script>
+
+
+    </body></html>
